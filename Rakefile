@@ -10,10 +10,10 @@ begin
   Jeweler::Tasks.new do |gem|
     gem.name = "sitemap_generator"
     gem.summary = %Q{Easily generate enterprise class Sitemaps for your Rails site using a familiar Rails Routes-like DSL}
-    gem.description = %Q{A Rails 3-compatible gem/plugin to generate enterprise-class Sitemaps using a familiar Rails Routes-like DSL.  Sitemaps are readable by all search engines and adhere to the Sitemap protocol specification.  Automatically pings search engines to notify them of new sitemaps (including Google, Yahoo and Bing).  Provides rake tasks to easily manage your sitemaps.  Supports image sitemaps and handles millions of links.}
+    gem.description = %Q{SitemapGenerator is a Rails gem that makes it easy to generate enterprise-class Sitemaps readable by all search engines.  Generated Sitemaps adhere to the Sitemap protocol specification.  When you generate new Sitemaps, SitemapGenerator can automatically ping the major search engines (including Google, Yahoo and Bing) to notify them.  SitemapGenerator includes rake tasks to easily manage your sitemaps.}
     gem.email = "kjvarga@gmail.com"
     gem.homepage = "http://github.com/kjvarga/sitemap_generator"
-    gem.authors = ["Adam Salter", "Karl Varga"]
+    gem.authors = ["Karl Varga", "Adam Salter"]
     gem.files =  FileList["[A-Z]*", "{bin,lib,rails,templates,tasks}/**/*"]
     gem.test_files = []
     gem.add_development_dependency "rspec"
@@ -49,6 +49,9 @@ end
 task :default => :test
 
 namespace :test do
+  #desc "Test as a gem, plugin and Rails 3 gem"
+  #task :all => ['test:gem', 'test:plugin']
+
   task :gem => ['test:prepare:gem', 'multi_spec']
   task :plugin => ['test:prepare:plugin', 'multi_spec']
   task :rails3 => ['test:prepare:rails3', 'multi_spec']
@@ -78,14 +81,6 @@ namespace :test do
   end
 end
 
-desc "Release a new patch version"
-task :release_new_version do
-  Rake::Task['version:bump:patch'].invoke
-  Rake::Task['github:release'].invoke
-  Rake::Task['git:release'].invoke
-  Rake::Task['gemcutter:release'].invoke
-end
-
 desc "Run tests as a gem install"
 task :test => ['test:gem']
 
@@ -108,4 +103,20 @@ Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.options << '--line-numbers' << '--inline-source'
   rdoc.rdoc_files.include('README.md')
   rdoc.rdoc_files.include('lib/**/*.rb')
+end
+
+namespace :release do
+
+  desc "Release a new patch version"
+  task :patch do
+    Rake::Task['version:bump:patch'].invoke
+    Rake::Task['release:current'].invoke
+  end
+
+  desc "Release the current version (e.g. after a version bump).  This rebuilds the gemspec, pushes the updated code, tags it and releases to RubyGems"
+  task :current do
+    Rake::Task['github:release'].invoke
+    Rake::Task['git:release'].invoke
+    Rake::Task['gemcutter:release'].invoke
+  end
 end
